@@ -1,0 +1,77 @@
+# create documents
+PUT /product/default/1
+{
+  "name":  "Design Patterns",
+  "instructor":{
+    "firstName": "Erich",
+    "lastName": "Gamma"
+  },
+  "price": 195
+}
+
+GET /product/default/
+
+#retrive documents
+GET /product/default/1
+
+#update documents(not really, create new documnt)
+POST /product/default/1/_update
+{
+  "doc":{"price": 92,"tags":["c++", "Richard Helm", "Ralph Johnson", "John Vlissides"]}
+}
+
+# diffrent approach, scripted updates
+# stx is the document variable
+POST /product/default/1/_update
+{
+  "script": "ctx._source.price += 10"
+}
+
+# upserts
+# if doucument exsist price will increase
+# if not new document will create with price = 100
+POST /product/default/1/_update
+{
+  "script": "ctx._source.price += 5"
+  , "upsert": {
+    "price": 100
+  }
+}
+
+# Delete document
+DELETE /product/default/1
+
+
+# Deleting base on query
+POST /product/default/
+{
+  "name":"Coffe",
+  "category" :"food"
+}
+
+POST /product/default/
+{
+  "name":"A Song of Ice and Fire",
+  "category" :"book"
+}
+POST /product/_delete_by_query
+{
+  "query":{
+    "match":{
+      "category":"book"
+    }
+  }
+}
+# Exploring cluster
+GET /_cat/health?v
+
+# Nodes list
+GET /_cat/nodes?v
+
+# indices
+GET /_cat/indices?v
+
+#Shard allocation
+GET /_cat/allocation?v
+# Shards list
+GET /_cat/shards?v

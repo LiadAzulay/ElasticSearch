@@ -1,0 +1,473 @@
+########################################
+################ Aggregations ##########
+########################################
+
+PUT /order
+{
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "purchased_at": {
+          "type": "date"
+        },
+        "lines": {
+          "type": "nested",
+          "properties": {
+            "product_id": {
+              "type": "integer"
+            },
+            "amount": {
+              "type": "double"
+            },
+            "quantity": {
+              "type": "short"
+            }
+          }
+        },
+        "total_amount": {
+          "type": "double"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "sales_channel": {
+          "type": "keyword"
+        },
+        "salesman": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "text"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+# Checking mapping
+GET /order/default/_mapping
+
+# Metric aggregations
+# One aggregation
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "total_sales": {
+      "sum": {
+        "field": "total_amount"
+      }
+    }
+  }
+}
+
+# More aggregations
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "total_sales": {
+      "sum": {
+        "field": "total_amount"
+      }
+    },
+    "avg_sale": {
+      "avg": {
+        "field": "total_amount"
+      }
+    },
+    "min_sale": {
+      "min": {
+        "field": "total_amount"
+      }
+    },
+    "max_sale": {
+      "max": {
+        "field": "total_amount"
+      }
+    }
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "total_salesmen": {
+      "cardinality": {
+        "field": "salesman.id"
+      }
+    }
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "vales_count": {
+      "value_count": {
+        "field": "total_amount"
+      }
+    }
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "amount_stats":{
+      "stats": {
+      "field": "total_amount"
+      }
+    }
+  }
+}
+
+# Bucket aggregations
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword",
+        "size": 10
+      }
+    }
+    
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword",
+        "missing": "N/A"
+      }
+    }
+    
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword",
+        "missing": "N/A",
+        "min_doc_count": 0
+      }
+    }
+    
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword",
+        "missing": "N/A",
+        "min_doc_count": 0,
+        "order": {
+          "_term": "asc"
+        }
+      }
+    }
+    
+  }
+}
+# Nested aggregations
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword"
+      },
+      "aggs": {
+        "status_stats": {
+          "stats": {
+            "field": "total_amount"
+          }
+        }
+      }
+    }
+    
+  }
+}
+
+
+GET /order/default/_search
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "total_amount": {
+        "gte": 100 
+      }
+    }
+  }, 
+  "aggs": {
+    "status_terms":{
+      "terms": {
+        "field": "status.keyword"
+      },
+      "aggs": {
+        "status_stats": {
+          "stats": {
+            "field": "total_amount"
+          }
+        }
+      }
+    }
+    
+  }
+}
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "low_value":{
+      "filter": {
+        "range": {
+          "total_amount": {
+            "gte": 10
+          }
+        }
+      }, 
+      "aggs": {
+        "avg_amount": {
+          "avg": {
+            "field": "total_amount"
+          }
+        }
+      }
+    }
+    
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+    "filter_exemple": {
+      "filters": {
+        "filters": {
+          "pasta": {
+            "match": {
+              "title": "pasta"
+            }
+          },
+          "spaghetti": {
+            "match": {
+              "title": "spaghetti"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+# Range aggregations
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+
+      "amount_distribution": {
+        "range": {
+          "field": "total_amount",
+          "ranges":[
+          {
+            "to": 50
+          },
+          {
+            "from": 50,
+            "to": 100
+          },
+          {
+            "from": 100
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+GET /order/default/_search
+{
+  "size": 0,
+  "aggs": {
+
+      "purchased_ranges": {
+        "date_range": {
+          "field": "purchased_at",
+          "format": "yyyy-MM-dd", 
+          "keyed": true, 
+          "ranges":[
+            {
+              "from": "2016-01-01",
+              "to": "2016-01-01||+6M",
+              "key": "first_half"
+            },
+            {
+              "from": "2016-01-01||+6M",
+              "to": "2016-01-01||+1y",
+              "key": "second_half"
+            }
+        ]
+      },
+      "aggs": {
+        "bucket_stats": {
+          "stats": {
+            "field": "total_amount"
+          }
+        }
+      }
+    }
+  }
+}
+
+### Histograms ###
+GET /order/default/_search
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "total_amount": {
+        "gte": 100
+      }
+    }
+  }, 
+  "aggs": {
+    "amount_distribution": {
+      "histogram": {
+        "field": "total_amount",
+        "interval": 50,
+        "min_doc_count": 1
+      }
+    }
+  }
+}
+
+GET /order/default/_search
+{
+  "size": 0,
+  "query": {
+    "range": {
+      "total_amount": {
+        "gte": 100
+      }
+    }
+  }, 
+  "aggs": {
+    "amount_distribution": {
+      "histogram": {
+        "field": "total_amount",
+        "interval": 50,
+        "min_doc_count": 1,
+        "extended_bounds": {
+          "min": 0,
+          "max": 500
+        }
+      }
+    }
+  }
+}
+
+#Global aggregation
+GET /order/default/_search
+{
+
+  "query": {
+    "range": {
+      "total_amount": {
+        "gte": 100
+      }
+    }
+  },
+    "size": 0,
+    "aggs": {
+      "all_orders": {
+        "global": {},
+        "aggs": {
+          "stats_amount": {
+            "stats": {
+              "field": "total_amount"
+            }
+          }
+        }
+      }
+    }
+}
+GET /order/default/_search
+{
+
+  "query": {
+    "range": {
+      "total_amount": {
+        "gte": 100
+      }
+    }
+  },
+    "size": 0,
+    "aggs": {
+      "stats_expensive":{
+        "stats": {
+          "field": "total_amount"
+        }
+      },
+      "all_orders": {
+        "global": {},
+        "aggs": {
+          "stats_amount": {
+            "stats": {
+              "field": "total_amount"
+            }
+          }
+        }
+      }
+    }
+}
+# Missing field values
+
+POST /order/_doc/1001
+{
+  "total_amount": 100
+}
+POST /order/_doc/1002
+{
+  "total_amount": 200,
+  "status": null
+}
+
+
+GET /order/_doc/_search
+{
+  "size": 0,
+  "aggs": {
+    "orders_without_status": {
+      "missing": {
+        "field": "status.keyword"
+      }
+    }
+  }
+}

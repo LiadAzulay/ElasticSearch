@@ -1,0 +1,144 @@
+#######################################
+#############  ANALYZERS  #############
+#######################################
+
+### Analyze API
+POST _analyze
+{
+  "tokenizer": "standard",
+  "text": "I'm in the mood for build new application"
+}
+
+POST _analyze
+{
+  "filter": ["lowercase"],
+  "text": "I'm in the mood for build new application"
+}
+
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "I'm in the mood for build new application"
+}
+
+# Configuring built-in analyzers and token filters
+PUT /existing_analyzet_config
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "english_stop":{
+          "type":"standard",
+          "stopwords":"_english_"
+        }
+      },
+      "filter": {
+        "stemmer_exmple":{
+          "type": "stemmer",
+          "name": "english"
+      }
+    }
+  }
+}
+}
+
+POST /existing_analyzet_config/_analyze
+{
+  "analyzer": "english_stop",
+  "text": "I'n in mood to drink coffee"
+}
+
+
+# Creating custom analyzers
+PUT /analysers_test
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "english_stop":{
+          "type":"standard",
+          "stopwords":"_english_"
+        },
+        "analyzer_exemple":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "char_filter": [
+            "html_strip"
+            ],
+            "filter": [
+              "standard",
+              "lowercase",
+              "trim",
+              "stemmer_exmple"
+              ]
+        }
+      },
+      "filter": {
+        "stemmer_exmple":{
+          "type": "stemmer",
+          "name": "english"
+      }
+    }
+  }
+}
+}
+
+# Using analyzers in mappings
+
+PUT /analysers_test/default/_mapping
+{
+  "properties": {
+    "description": {
+      "type": "text",
+      "analyzer": "analyzer_exemple"
+    },
+    "teaser":{
+      "type": "text",
+      "analyzer": "standard"
+    }
+  }
+}
+
+POST /analysers_test/default/1
+{
+  "description":"drinking",
+  "teaser": "drinking"
+}
+
+
+GET /analysers_test/default/_search
+{
+  "query": {
+    "term": {
+      "description": {
+        "value": "drinking"
+      }
+    }
+  }
+  
+}
+############################################
+### Adding analyzers to existing indices ###
+############################################
+
+# need to close the index before addind analyzers and then reopen it
+
+#closing index
+POST /analysers_test/_close
+
+# Adding analyzers
+PUT /analysers_test/_settings
+{
+  "analysis": {
+    "analyzer": {
+      "french_stop":{
+        "type":"standard",
+        "stopwords": "_french_"
+      }
+    }
+  }
+}
+
+#open index
+POST /analysers_test/_open
+

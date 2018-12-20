@@ -1,0 +1,113 @@
+#######################################
+#############  MAPPING  ###############
+#######################################
+
+
+# Dynamic mapping, mapping that created behind 
+GET /product/default/_mapping
+
+# Adding mapping to existing indices
+PUT /product/default/_mapping
+{
+  "properties":{
+    "discount":{
+      "type":"double"
+    }
+  }
+}
+#### Changing existing mapping ####
+#wrong way
+PUT /product/default/_mapping
+{
+  "properties":{
+    "discount":{
+      "type":"integer"
+    }
+  }
+}
+# right way
+DELETE /product
+
+PUT /product
+{
+  "mappings": {
+    "default_1":{
+      "dynamic": false,
+      "properties":{
+        "in_stock":{
+          "type":"integer"
+        },
+        "is_active":"boolean"
+      },
+      "price":{
+        "type":"integer"
+      },
+      "sold":{
+        "type":"long"
+      }
+    }
+  }
+}
+# Adding multi-fields mapping to existing indices
+PUT /product/default/_mapping
+{
+  "properties": {
+    "description": {
+      "type":"text"
+    },
+    "name":{
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "tags":{
+      "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+        }
+      }
+    }
+  }
+}
+
+# Defining custom date format
+# Formats: year, year_month,strict_year, strict_date_optional_time||epoch_millis
+PUT /product/default/_mapping
+{
+    "properties": {
+    "created": {
+      "type":"date",
+      "format": "yyyy/MM/dd HH:mm:ss||yyyy/MM/dd"
+    }
+  }
+}
+
+POST /product/default/2000
+{
+  "description":"Test",
+  "discount":  20
+}
+GET /product/default/2000
+GET /product/default/_search
+{
+  "query":{
+    "match": {
+      "description": "Test"
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query":{
+    "term": {
+      "discount": 20
+    }
+  }
+}
+
+POST /product/default/_update_by_query?conflicts=proceed

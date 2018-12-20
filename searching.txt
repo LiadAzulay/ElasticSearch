@@ -1,0 +1,413 @@
+#######################################
+#############  SEARCHING  #############
+#######################################
+
+### Searching with the request URI ###
+
+# get each document in index
+get /product/default/_search?q=*
+
+# get document with field name == lobster
+GET /product/default/_search?q=name:lobster
+
+# get document with field name == Meat
+GET /product/default/_search?q=name:Meat
+
+# get documents with boolean logic in search query
+GET /product/default/_search?q=name:Meat OR name:Tuna
+
+### Searching with Query DSL
+# match all
+GET /product/default/_search
+{
+  "query": {
+    "match_all": {
+      
+    }
+  }
+}
+# search name == lobster
+# adding explaing parameter returning how elastic calculate the score for each matching document
+GET /product/default/_search?explain
+{
+  "query": {
+    "term": {
+      "name": "lobster"
+    }
+  }
+}
+
+# Explaing API, get the reason why it match or didn't match
+GET /product/default/1/_explain
+{
+  "query": {
+    "term": {
+      "name": "lobster"
+    }
+  }
+}
+
+
+
+# Checking the diffrences between the queries
+# Getting results
+GET /product/default/_search
+{
+  "query": {
+    "term": {
+      "name": "lobster"
+    }
+  }
+}
+# Not getting results
+GET /product/default/_search
+{
+  "query": {
+    "term": {
+      "name": "Lobster"
+    }
+  }
+}
+# Getting results
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": "Lobster"
+    }
+  }
+}
+
+#term query search for exact value  
+# for value == lobster it will find because of standard analyzer with token filter of lowercase
+# the match query pass through analyzer  
+
+
+#######################################
+###############  TERM  ################
+#######################################
+
+GET /product/default/_search
+{
+  "query": {
+    "term": {
+      "is_active": true
+    }
+  }
+}
+
+# Searching for multiple terms
+GET /product/default/_search
+{
+  "query": {
+    "terms": {
+      "tags.keyword": [
+        "Soup",
+        "Cake"
+        ]
+    }
+  }
+}
+
+# Retrieving documents based on IDs
+GET /product/default/_search
+{
+  "query": {
+  "ids": {
+    "values": [1, 2, 3]
+  }
+  }
+}
+# Matching documents with range values
+
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "in_stock": {
+        "gte": 1,
+        "lte": 5
+      }
+    }
+  }
+}
+# Dates
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte": "01-01-2010",
+        "lte": "31-12-2010",
+        "format": "dd-MM-yyyy"
+      }
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gte": "2010/01/01",
+        "lte": "2010/12/31"
+      }
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "lt": "2010/01/01||-1y/M"
+      }
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "created": {
+        "gt": "now"
+      }
+    }
+  }
+}
+
+# Matching documents with non-null values
+GET /product/default/_search
+{
+  "query": {
+    "exists": {
+      "field": "tags"
+    }
+  }
+}
+# Matching based on prefixes
+GET /product/default/_search
+{
+  "query": {
+    "prefix": {
+      "tags.keyword": {
+        "value": "Vege"
+      }
+    }
+  }
+}
+
+# wildcards
+
+GET /product/default/_search
+{
+  "query": {
+    "wildcard": {
+      "tags.keyword": "Ve*ble"
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query": {
+    "wildcard": {
+      "tags.keyword": "Vege??ble"
+    }
+  }
+}
+
+# REGEX
+GET /product/default/_search
+{
+  "query": {
+    "regexp": {
+      "tags.keyword": "Veget[A-Za-z]+ble"
+    }
+  }
+}
+
+
+##### Questions for this Assignment #####
+
+# 1.Please write a query matching products that didn’t sell very well, being products where the “sold” field has a value of less than 10 (sold < 10).
+
+# 2.Please write a query that matches products that sold okay, meaning less than 30 and greater than or equal to 10 (sold < 30 && sold >= 10).
+
+# 3.Please write a query that matches documents containing the term “Meat” within the “tags” field.
+
+# 4.Please write a query matching documents containing one of the terms "Tomato" and "Paste" within the "name" field.
+
+
+# 5.Please write a query that matches products with a "name" field including “pasta”, “paste”, or similar. The query should be dynamic and not use the "terms" query clause.
+
+# 6.Please write a query that matches products that contain a number within their "name" field.
+# 1.
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "sold": {
+        "lt": 10
+      }
+    }
+  }
+}
+# 2.
+GET /product/default/_search
+{
+  "query": {
+    "range": {
+      "sold": {
+        "gte": 10,
+        "lt": 30
+      }
+    }
+  }
+}
+#3.
+GET /product/default/_search
+{
+  "query": {
+    "term": {
+      "tags.keyword": "Meat"
+    }
+  }
+}
+#4.
+GET /product/default/_search
+{
+  "query": {
+    "terms": {
+      "name": ["Tomato","Paste"]
+    }
+  }
+}
+#5.
+GET /product/default/_search
+{
+  "query": {
+    "wildcard": {
+      "name": "Past?"
+    }
+  }
+}
+#6.
+GET /product/default/_search
+{
+  "query": {
+    "regexp": {
+      "name": "[0-9]+"
+    }
+  }
+}
+
+### Full Text Queries ###
+
+#########################################
+#MEW DATA
+GET /recipe/default/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+# Checking defult mapping
+GET /recipe/default/_mapping
+
+# Flexible matching with the match query
+
+GET /recipe/default/_search
+{
+  "query": {
+    "match": {
+    "title": "Recapies with pasta or spaghetti"
+    }
+  }
+}  
+# Use operator
+GET /recipe/default/_search
+{
+  "query": {
+    "match": {
+    "title": {
+      "query": "Recapies with pasta or spaghetti",
+      "operator": "or"
+    }
+    }
+  }
+}  
+
+# Matching phrases
+# order matters
+GET /recipe/default/_search
+{
+  "query": {
+    "match_phrase": {
+    "title": "spaghetti puttanesca"
+    }
+  }
+} 
+#Searching multiple fields
+
+GET /recipe/default/_search
+{
+  "query": {
+    "multi_match": {
+    "query": "pasta",
+    "fields": ["title","description"]
+    }
+  }
+} 
+
+# 1.Please write a query searching for the sentence "pasta with parmesan and spinach" within the "title" field, simulating that this sentence was entered by a user within a search field.
+
+# 2.Please write a query searching for phrase "pasta carbonara" within the "title" field.
+
+# 3.Please write a query searching for the terms "pasta" or "pesto" within the "title" and "description" fields.
+
+# 1.
+GET /recipe/default/_search
+{
+  "query": {
+    "match": {
+    "title": "pasta with parmesan and spinach" 
+    }
+  }
+} 
+
+# 2.
+GET /recipe/default/_search
+{
+  "query": {
+    "match_phrase": {
+    "title": "pasta carbonara"
+    }
+  }
+} 
+# 3.
+GET /recipe/default/_search
+{
+  "query": {
+    "terms": {
+      "title": ["pasta","pesto"]
+    }
+  }
+}
+
+
+GET /recipe/_doc/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "pasta pesto",
+      "fields": [ "title", "description" ]
+    }
+  }
+}
+
+
+

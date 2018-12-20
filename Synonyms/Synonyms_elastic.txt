@@ -1,0 +1,38 @@
+PUT /synonyms
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym",
+          "synonyms_path": "analysis/synonyms.txt"
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "description": {
+          "type": "text",
+          "analyzer": "my_analyzer"
+        }
+      }
+    }
+  }
+}
+# Checking the synonym from file
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch"
+}

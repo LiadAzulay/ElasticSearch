@@ -1,0 +1,152 @@
+###############################################
+########   Controlling Query Results   ########
+###############################################
+
+# Answering with diffrents formats
+GET /recipe/default/_search?format=yaml
+{
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+# Source filtering
+
+GET /recipe/default/_search?format=yaml
+{
+  "_source": false, 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+GET /recipe/default/_search?format=yaml
+{
+  "_source": "created", 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+GET /recipe/default/_search?format=yaml
+{
+  "_source": "ingredients.name", 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+
+GET /recipe/default/_search?format=yaml
+{
+  "_source": "ingredients.*", 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+GET /recipe/default/_search?format=yaml
+{
+  "_source": ["ingredients.*", "servings.max"], 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+# Specifying the result size
+# Defult size is 10
+GET /recipe/default/_search?size=3
+{
+  "_source": false, 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+GET /recipe/default/_search
+{
+  "size": 4,
+  "_source": false, 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+# Specifying an offset
+
+GET /recipe/default/_search
+{
+  "size": 4,
+  "from": 4, 
+  "_source": false, 
+  "query": {
+    "match": { "title": "pasta" }
+  }
+}
+
+# Sorting results
+GET /recipe/default/_search
+{
+  "_source": false, 
+  "query": {
+    "match_all": {}
+  },
+  "sort": [
+   "preparation_time_minutes"
+  ]
+}
+
+GET /recipe/default/_search
+{
+  "_source": "created", 
+  "query": {
+    "match_all": {}
+  },
+  "sort":[
+    {
+      "created": "desc"
+    }
+    
+    ]
+}
+
+GET /recipe/default/_search
+{
+  "_source": ["created","preparation_time_minutes"], 
+  "query": {
+    "match_all": {}
+  },
+  "sort":[
+    { "created": "desc" },
+    { "preparation_time_minutes": "asc" }
+  ]
+}
+
+# Sorting by multi-value fields
+
+GET /recipe/default/_search
+{
+  "_source": "ratings", 
+  "query": {
+    "match_all": {}
+  },
+  "sort":[
+    { "ratings":{"order": "desc", "mode": "avg"} }
+  ]
+}
+
+GET /recipe/default/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"title": "pasta"} }
+      ],
+      "filter": [{
+        "range": {
+          "preparation_time_minutes":{"lte": 15}
+        }
+      }]
+    }
+  }
+}
+

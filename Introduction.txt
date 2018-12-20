@@ -1,0 +1,129 @@
+###############################################
+################   Introduction  ##############
+###############################################
+
+# creating an index
+PUT /ecommerce
+
+# list of indexes
+GET /_cat/indices?v
+
+# Deleting an index
+DELETE /ecommerce
+
+#################################
+# there is 4 data type
+
+
+# Core data types
+# string, numeric, date, boolean, binary
+
+## Complex data types
+## Object, array, nested
+
+### Geo data types
+### Geo-point, Geo-shape
+
+#### Specialized data types
+#### IPV4, attachment,token count, completion
+
+#Adding simple mappings
+PUT /ecommerce
+{
+  "mappings": {
+    "product": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "double"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "categories": {
+          "type": "nested",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        "tags": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
+PUT /ecommerce/product/1001
+{
+  "name": "T-Shirt",
+  "price": 20.00,
+  "description": "Regular t-shirt",
+  "status": "in_stock",
+  "quantity": 3,
+  "categories": {
+    "name": "shirt"
+  },
+   "tags":["clothes","men", "summer"]
+}
+PUT /ecommerce/product/1002
+{
+  "name": "pants",
+  "price": 30.00,
+  "description": "Jeans pants",
+  "status": "in_stock",
+  "quantity": 2,
+  "categories": {
+    "name": "pants"
+  },
+   "tags":["clothes","women"]
+}
+PUT /ecommerce/product/1003
+{
+  "name": "swimsuits",
+  "price": 40.00,
+  "description": "Surfing shorts",
+  "status": "in_stock",
+  "quantity": 1,
+  "categories": {
+    "name": "pants"
+  },
+   "tags":["clothes","men", "summer"]
+}
+
+# Replacing documents
+
+PUT /ecommerce/product/1001
+{
+  "name": "T-Shirt",
+  "price": 15.00,
+  "description": "Regular t-shirt",
+  "status": "in_stock",
+  "quantity": 3,
+  "categories": {
+    "name": "shirt"
+  },
+   "tags":["clothes","men", "summer"]
+}
+
+# Updating documents
+
+PUT /ecommerce/product/1001/_update
+{
+  "doc": {
+    "price": 15
+  }
+}
+
+# Deleting documents
+DELETE /ecommerce/product/1001

@@ -1,0 +1,296 @@
+
+#########################################
+##### Improving Search Results ##########
+#########################################
+PUT /proximity/_doc/1
+{
+  "title": "Spicy Sauce"
+}
+PUT /proximity/_doc/2
+{
+  "title": "Spicy Tomato Sauce"
+}
+PUT /proximity/_doc/3
+{
+  "title": "Spicy Tomato and Garlic Sauce"
+}
+PUT /proximity/_doc/4
+{
+  "title": "Tomato Sauce (spicy)"
+}
+PUT /proximity/_doc/5
+{
+  "title": "Spicy and very delicious Tomato Sauce"
+}
+# Proximity searches
+GET /proximity/_doc/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": {
+        "query": "spicy sauce",
+        "slop": 1
+      }
+    }
+  }
+}
+
+GET /proximity/_doc/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": {
+        "query": "spicy sauce",
+        "slop": 3
+      }
+    }
+  }
+}
+
+GET /proximity/_doc/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match":{
+            "title": {
+              "query": "spicy sauce"
+            }
+          }
+        }
+      ], 
+      "should": [{
+        "match_phrase": {
+          "title": {
+              "query": "spicy sauce",
+              "slop": 3
+            }
+        }
+      }]
+    }
+  }
+}
+# Fuzzy match query (handling typos)
+
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "lobster",
+        "fuzziness": "auto"
+      }
+    }
+  }
+}
+
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "lobster love",
+        "operator": "and", 
+        "fuzziness": 1
+      }
+    }
+  }
+}
+
+#  Fuzzy query
+GET /product/default/_search
+{
+  "query": {
+    "fuzzy": {
+      "name": {
+        "value": "LOBSTER",
+        "fuzziness": "auto"
+      }
+    }
+  }
+}
+
+# Adding synonyms
+PUT /synonyms
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym", 
+          "synonyms": [
+            "awful => terrible",
+            "awesome => great, super",
+            "elasticsearch, logstash, kibana => elk",
+            "weird, strange"
+          ]
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "description": {
+          "type": "text",
+          "analyzer": "my_analyzer"
+        }
+      }
+    }
+  }
+}
+# Checking awesome
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "awesome"
+}
+
+# Checking elasticsearch
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch"
+}
+
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "weird"
+}
+
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch is awesome, but can also seem weird sometimes."
+}
+
+POST /synonyms/_doc
+{
+  "description": "Elasticsearch is awesome, but can also seem weird sometimes."
+}
+
+
+GET /synonyms/_doc/_search
+{
+  "query": {
+    "match": {
+      "description": "great"
+    }
+  }
+}
+
+GET /synonyms/_doc/_search
+{
+  "query": {
+    "match": {
+      "description": "awesome"
+    }
+  }
+}
+
+# Adding a test document
+
+POST /highlighting/_doc/1
+{
+  "description": "Let me tell you a story about Elasticsearch. It's a full-text search engine that is built on Apache Lucene. It's really easy to use, but also packs lots of advanced features that you can use to tweak its searching capabilities. Lots of well-known and established companies use Elasticsearch, and so should you!"
+}
+
+# Highlighting matches within the description field
+
+GET /highlighting/_doc/_search
+{
+  "_source": false,
+  "query": {
+    "match": { "description": "Elasticsearch story" }
+  },
+  "highlight": {
+    "fields": {
+      "description" : {}
+    }
+  }
+}
+
+
+# stemming
+PUT /stemming_test
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym",
+          "synonyms": [
+            "firm => company",
+            "love, enjoy"
+          ]
+        },
+        "stemmer_test" : {
+          "type" : "stemmer",
+          "name" : "english"
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_test",
+            "stemmer_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "description": {
+          "type": "text",
+          "analyzer": "my_analyzer"
+        }
+      }
+    }
+  }
+}
+
+# Adding a test document
+
+POST /stemming_test/_doc/1
+{
+  "description": "I love working for my firm!"
+}
+
+GET /stemming_test/_doc/_search
+{
+  "query": {
+    "match": {
+      "description": "enjoy working"
+    }
+  }
+}
+# Synonyms and stemmed words are still highlighted
+
+GET /stemming_test/_doc/_search
+{
+  "query": {
+    "match": {
+      "description": "enjoy work"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "description": {}
+    }
+  }
+}
